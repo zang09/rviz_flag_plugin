@@ -252,7 +252,7 @@ void PlantFlagTool::makeFlag( const Ogre::Vector3& position )
 // file is read back in.
 void PlantFlagTool::save( rviz::Config config ) const
 {
-//  config.mapSetValue( "Class", getClassId() );
+  config.mapSetValue( "Class", getClassId() );
 
 //  // The top level of this tool's Config is a map, but our flags
 //  // should go in a list, since they may or may not have unique keys.
