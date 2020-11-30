@@ -98,7 +98,7 @@ void PlantFlagTool::onInitialize()
   moving_flag_node_->attachObject( entity );
   moving_flag_node_->setVisible( false );
 
-  flag_publisher_ = nh_.advertise<geometry_msgs::PointStamped>("/flag/points", 1, true);
+  flag_publisher_ = nh_.advertise<rviz_flag_plugin::PointArray>("/flag/points", 1, true);
 }
 
 // Activation and deactivation
@@ -143,6 +143,7 @@ void PlantFlagTool::deactivate()
   if( moving_flag_node_ )
   {
     moving_flag_node_->setVisible( false );
+    moving_flag_node_->showBoundingBox( false );
     delete current_flag_property_;
     current_flag_property_ = NULL;
   }
@@ -201,6 +202,11 @@ int PlantFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
           getPropertyContainer()->removeChildren(size-1, 1);
           current_flag_property_->setName("Flag " + QString::number(size-1));
 
+          if(ros::ok())
+          {
+            flag_.points.erase(flag_.points.end()-1);
+            flag_publisher_.publish(flag_);
+          }
           flag_nodes_.erase(flag_nodes_.end()-1);
       }
     }
@@ -223,14 +229,14 @@ void PlantFlagTool::makeFlag( const Ogre::Vector3& position )
 
   if(ros::ok())
   {
-    geometry_msgs::PointStamped p;
-    p.header.stamp = ros::Time::now();
-    p.point.x = position.x;
-    p.point.y = position.y;
-    p.point.z = position.z;
-    flag_publisher_.publish(p);
-  }
+    geometry_msgs::Point p;
+    p.x = position.x;
+    p.y = position.y;
+    p.z = position.z;
+    flag_.points.push_back(p);
 
+    flag_publisher_.publish(flag_);
+  }
   flag_nodes_.push_back( node );
 }
 

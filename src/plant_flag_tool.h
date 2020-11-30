@@ -32,7 +32,7 @@
 #include <ros/ros.h>
 #include <rviz/tool.h>
 
-#include <geometry_msgs/PointStamped.h>
+#include <rviz_flag_plugin/PointArray.h>
 
 namespace Ogre
 {
@@ -81,6 +81,7 @@ private:
 
   ros::NodeHandle nh_;
   ros::Publisher flag_publisher_;
+  rviz_flag_plugin::PointArray flag_;
 };
 // END_TUTORIAL
 
