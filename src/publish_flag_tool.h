@@ -54,12 +54,12 @@ namespace rviz_flag_plugin
 // Here we declare our new subclass of rviz::Tool.  Every tool
 // which can be added to the tool bar is a subclass of
 // rviz::Tool.
-class PlantFlagTool: public rviz::Tool
+class PublishFlagTool: public rviz::Tool
 {
 Q_OBJECT
 public:
-  PlantFlagTool();
-  ~PlantFlagTool();
+  PublishFlagTool();
+  ~PublishFlagTool();
 
   virtual void onInitialize();
 

@@ -1,6 +1,6 @@
 <library path="lib/librviz_flag_plugin">
-  <class name="rviz_flag_plugin/NewPlantFlag"
-         type="rviz_flag_plugin::PlantFlagTool"
+  <class name="rviz_flag_plugin/PublishFlag"
+         type="rviz_flag_plugin::PublishFlagTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for planting flags on the ground plane in rviz.

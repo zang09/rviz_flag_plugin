@@ -39,7 +39,7 @@
 #include <rviz/geometry.h>
 #include <rviz/properties/vector_property.h>
 
-#include "plant_flag_tool.h"
+#include "publish_flag_tool.h"
 
 namespace rviz_flag_plugin
 {
@@ -53,7 +53,7 @@ namespace rviz_flag_plugin
 //
 // Here we set the "shortcut_key_" member variable defined in the
 // superclass to declare which key will activate the tool.
-PlantFlagTool::PlantFlagTool()
+PublishFlagTool::PublishFlagTool()
   : moving_flag_node_( NULL )
   , current_flag_property_( NULL )
 {
@@ -64,7 +64,7 @@ PlantFlagTool::PlantFlagTool()
 // disappear from the 3D scene.  The destructor for a Tool subclass is
 // only called when the tool is removed from the toolbar with the "-"
 // button.
-PlantFlagTool::~PlantFlagTool()
+PublishFlagTool::~PublishFlagTool()
 {
   for( unsigned i = 0; i < flag_nodes_.size(); i++ )
   {
@@ -83,13 +83,13 @@ PlantFlagTool::~PlantFlagTool()
 // In this case we load a mesh object with the shape and appearance of
 // the flag, create an Ogre::SceneNode for the moving flag, and then
 // set it invisible.
-void PlantFlagTool::onInitialize()
+void PublishFlagTool::onInitialize()
 {
-  flag_resource_ = "package://rviz_flag_plugin/media/flag.dae";
+  flag_resource_ = "package://rviz_flag_plugin/model/flag.dae";
 
   if( rviz::loadMeshFromResource( flag_resource_ ).isNull() )
   {
-    ROS_ERROR( "PlantFlagTool: failed to load model resource '%s'.", flag_resource_.c_str() );
+    ROS_ERROR( "PublishFlagTool: failed to load model resource '%s'.", flag_resource_.c_str() );
     return;
   }
 
@@ -118,7 +118,7 @@ void PlantFlagTool::onInitialize()
 // if it were writable the flag should really change position when the
 // user edits the property.  This is a fine idea, and is possible, but
 // is left as an exercise for the reader.
-void PlantFlagTool::activate()
+void PublishFlagTool::activate()
 {
   if( moving_flag_node_ )
   {
@@ -138,7 +138,7 @@ void PlantFlagTool::activate()
 // property, so that doesn't need to be done in a separate step.  If
 // we didn't delete it here, it would stay in the list of flags when
 // we switch to another tool.
-void PlantFlagTool::deactivate()
+void PublishFlagTool::deactivate()
 {
   if( moving_flag_node_ )
   {
@@ -164,7 +164,7 @@ void PlantFlagTool::deactivate()
 // place and drop the pointer to the VectorProperty.  Dropping the
 // pointer means when the tool is deactivated the VectorProperty won't
 // be deleted, which is what we want.
-int PlantFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
+int PublishFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
 {
   if( !moving_flag_node_ )
   {
@@ -219,7 +219,7 @@ int PlantFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
 }
 
 // This is a helper function to create a new flag in the Ogre scene and save its scene node in a list.
-void PlantFlagTool::makeFlag( const Ogre::Vector3& position )
+void PublishFlagTool::makeFlag( const Ogre::Vector3& position )
 {
   Ogre::SceneNode* node = scene_manager_->getRootSceneNode()->createChildSceneNode();
   Ogre::Entity* entity = scene_manager_->createEntity( flag_resource_ );
@@ -256,7 +256,7 @@ void PlantFlagTool::makeFlag( const Ogre::Vector3& position )
 // We first save the class ID to the config object so the
 // rviz::ToolManager will know what to instantiate when the config
 // file is read back in.
-void PlantFlagTool::save( rviz::Config config ) const
+void PublishFlagTool::save( rviz::Config config ) const
 {
   config.mapSetValue( "Class", getClassId() );
 
@@ -286,7 +286,7 @@ void PlantFlagTool::save( rviz::Config config ) const
 // In a tool's load() function, we don't need to read its class
 // because that has already been read and used to instantiate the
 // object before this can have been called.
-void PlantFlagTool::load( const rviz::Config& config )
+void PublishFlagTool::load( const rviz::Config& config )
 {
   // Here we get the "Flags" sub-config from the tool config and loop over its entries:
   rviz::Config flags_config = config.mapGetChild( "Flags" );
@@ -327,5 +327,5 @@ void PlantFlagTool::load( const rviz::Config& config )
 } // end namespace rviz_plugin_tutorials
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(rviz_flag_plugin::PlantFlagTool,rviz::Tool )
+PLUGINLIB_EXPORT_CLASS(rviz_flag_plugin::PublishFlagTool,rviz::Tool )
 // END_TUTORIAL
