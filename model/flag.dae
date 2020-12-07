@@ -272,7 +272,7 @@
 				<rotate sid="rotateZ">0 0 1 0.00000</rotate>
 				<rotate sid="rotateY">0 1 0 -0.00000</rotate>
 				<rotate sid="rotateX">1 0 0 0.00000</rotate>
-				<scale sid="scale">0.3 0.3 0.3</scale>
+				<scale sid="scale">0.8 0.8 0.8</scale>
 				<instance_geometry url="#Cylinder_001-Geometry">
 					<bind_material>
 						<technique_common>
