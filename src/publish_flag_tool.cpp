@@ -98,7 +98,7 @@ void PublishFlagTool::onInitialize()
   moving_flag_node_->attachObject( entity );
   moving_flag_node_->setVisible( false );
 
-  flag_publisher_ = nh_.advertise<rviz_flag_plugin::PointArray>("/flag/points", 1, true);
+  flag_publisher_ = nh_.advertise<rviz_flag_plugin::PointArray>("rviz/flag_points", 1, true);
 }
 
 // Activation and deactivation
@@ -181,7 +181,7 @@ int PublishFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
     moving_flag_node_->showBoundingBox(true);
     current_flag_property_->setVector( intersection );
 
-    if( event.leftDown() )
+    if( event.leftDown() ) // add
     {
       makeFlag( intersection );
       current_flag_property_ = nullptr; // Drop the reference so that deactivate() won't remove it.
@@ -189,7 +189,7 @@ int PublishFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
       return Render | Finished;
     }
 
-    if( event.rightDown() )
+    if( event.rightDown() ) // delete
     {
       int size = flag_nodes_.size();
 
@@ -209,6 +209,31 @@ int PublishFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
           }
           flag_nodes_.erase(flag_nodes_.end()-1);
       }
+    }
+
+    if( event.middleDown() ) // delete all
+    {
+        int size = flag_nodes_.size();
+
+        if(size != 0)
+        {
+            for( int i=0; i<size; i++ )
+            {
+              scene_manager_->destroySceneNode(flag_nodes_[i]);
+              rviz::VectorProperty* this_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number(i));
+              getPropertyContainer()->takeChild(this_flag_property_);
+            }
+
+            getPropertyContainer()->removeChildren(0, size);
+            current_flag_property_->setName("Flag " + QString::number(0));
+
+            if(ros::ok())
+            {
+              flag_.points.clear();
+              flag_publisher_.publish(flag_);
+            }
+            flag_nodes_.clear();
+        }
     }
   }
   else
