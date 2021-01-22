@@ -33,6 +33,8 @@
 #include <rviz/tool.h>
 
 #include <rviz_flag_plugin/PointArray.h>
+#include <geometry_msgs/Point.h>
+#include <std_msgs/Bool.h>
 
 namespace Ogre
 {
@@ -73,6 +75,9 @@ public:
 
 private:
   void makeFlag( const Ogre::Vector3& position );
+  void flagCallback( const rviz_flag_plugin::PointArrayConstPtr &msg );
+  void visibleCallback( const std_msgs::BoolConstPtr &msg);
+  void clearCallback( const std_msgs::BoolConstPtr &msg);
 
   std::vector<Ogre::SceneNode*> flag_nodes_;
   Ogre::SceneNode* moving_flag_node_;
@@ -81,6 +86,10 @@ private:
 
   ros::NodeHandle nh_;
   ros::Publisher flag_publisher_;
+  ros::Subscriber flag_subscriber_;
+  ros::Subscriber visible_subscriber_;
+  ros::Subscriber clear_subscriber_;
+
   rviz_flag_plugin::PointArray flag_;
 };
 // END_TUTORIAL

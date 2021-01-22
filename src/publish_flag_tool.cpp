@@ -98,7 +98,10 @@ void PublishFlagTool::onInitialize()
   moving_flag_node_->attachObject( entity );
   moving_flag_node_->setVisible( false );
 
-  flag_publisher_ = nh_.advertise<rviz_flag_plugin::PointArray>("rviz/flag_points", 1, true);
+  flag_publisher_     = nh_.advertise<rviz_flag_plugin::PointArray>("rviz/flag_points", 1, true);
+  flag_subscriber_    = nh_.subscribe<rviz_flag_plugin::PointArray>("rviz/make_flag", 1, &PublishFlagTool::flagCallback, this);
+  visible_subscriber_ = nh_.subscribe<std_msgs::Bool>("rviz/visible_flag", 1, &PublishFlagTool::visibleCallback, this);
+  clear_subscriber_   = nh_.subscribe<std_msgs::Bool>("rviz/clear_flag", 1, &PublishFlagTool::clearCallback, this);
 }
 
 // Activation and deactivation
@@ -195,45 +198,45 @@ int PublishFlagTool::processMouseEvent( rviz::ViewportMouseEvent& event )
 
       if(size != 0)
       {
-          scene_manager_->destroySceneNode(flag_nodes_[size-1]);
+        scene_manager_->destroySceneNode(flag_nodes_[size-1]);
 
-          rviz::VectorProperty* this_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number(size-1));
-          getPropertyContainer()->takeChild(this_flag_property_);
-          getPropertyContainer()->removeChildren(size-1, 1);
-          current_flag_property_->setName("Flag " + QString::number(size-1));
+        rviz::VectorProperty* this_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number(size-1));
+        getPropertyContainer()->takeChild(this_flag_property_);
+        getPropertyContainer()->removeChildren(size-1, 1);
+        current_flag_property_->setName("Flag " + QString::number(size-1));
 
-          if(ros::ok())
-          {
-            flag_.points.erase(flag_.points.end()-1);
-            flag_publisher_.publish(flag_);
-          }
-          flag_nodes_.erase(flag_nodes_.end()-1);
+        if(ros::ok())
+        {
+          flag_.points.erase(flag_.points.end()-1);
+          flag_publisher_.publish(flag_);
+        }
+        flag_nodes_.erase(flag_nodes_.end()-1);
       }
     }
 
     if( event.middleDown() ) // delete all
     {
-        int size = flag_nodes_.size();
+      int size = flag_nodes_.size();
 
-        if(size != 0)
+      if(size != 0)
+      {
+        for( int i=0; i<size; i++ )
         {
-            for( int i=0; i<size; i++ )
-            {
-              scene_manager_->destroySceneNode(flag_nodes_[i]);
-              rviz::VectorProperty* this_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number(i));
-              getPropertyContainer()->takeChild(this_flag_property_);
-            }
-
-            getPropertyContainer()->removeChildren(0, size);
-            current_flag_property_->setName("Flag " + QString::number(0));
-
-            if(ros::ok())
-            {
-              flag_.points.clear();
-              flag_publisher_.publish(flag_);
-            }
-            flag_nodes_.clear();
+          scene_manager_->destroySceneNode(flag_nodes_[i]);
+          rviz::VectorProperty* this_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number(i));
+          getPropertyContainer()->takeChild(this_flag_property_);
         }
+
+        getPropertyContainer()->removeChildren(0, size);
+        current_flag_property_->setName("Flag " + QString::number(0));
+
+        if(ros::ok())
+        {
+          flag_.points.clear();
+          flag_publisher_.publish(flag_);
+        }
+        flag_nodes_.clear();
+      }
     }
   }
   else
@@ -265,6 +268,61 @@ void PublishFlagTool::makeFlag( const Ogre::Vector3& position )
   flag_nodes_.push_back( node );
 }
 
+void PublishFlagTool::flagCallback(const rviz_flag_plugin::PointArrayConstPtr &msg)
+{
+  for(int i=0; i<msg->points.size(); i++)
+  {
+    Ogre::Vector3 intersection;
+    intersection.x = msg->points[i].x;
+    intersection.y = msg->points[i].y;
+    intersection.z = msg->points[i].z;
+
+    current_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number( flag_nodes_.size() ));
+    current_flag_property_->setReadOnly( true );
+    getPropertyContainer()->addChild( current_flag_property_ );
+
+    current_flag_property_->setVector( intersection );
+    current_flag_property_ = nullptr;
+
+    makeFlag( intersection );
+  }
+}
+
+void PublishFlagTool::visibleCallback(const std_msgs::BoolConstPtr &msg)
+{
+  for(int i=0; i<flag_nodes_.size(); i++)
+  {
+    flag_nodes_.at(i)->setVisible(msg->data);
+  }
+}
+
+void PublishFlagTool::clearCallback(const std_msgs::BoolConstPtr &msg)
+{
+  if(msg->data == true)
+  {
+    int size = flag_nodes_.size();
+
+    if(size != 0)
+    {
+      for( int i=0; i<size; i++ )
+      {
+        scene_manager_->destroySceneNode(flag_nodes_[i]);
+        rviz::VectorProperty* this_flag_property_ = new rviz::VectorProperty( "Flag " + QString::number(i));
+        getPropertyContainer()->takeChild(this_flag_property_);
+      }
+
+      getPropertyContainer()->removeChildren(0, size);
+
+      if(ros::ok())
+      {
+        flag_.points.clear();
+        flag_publisher_.publish(flag_);
+      }
+      flag_nodes_.clear();
+    }
+  }
+}
+
 // Loading and saving the flags
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //
@@ -285,27 +343,27 @@ void PublishFlagTool::save( rviz::Config config ) const
 {
   config.mapSetValue( "Class", getClassId() );
 
-//  // The top level of this tool's Config is a map, but our flags
-//  // should go in a list, since they may or may not have unique keys.
-//  // Therefore we make a child of the map (``flags_config``) to store
-//  // the list.
-//  rviz::Config flags_config = config.mapMakeChild( "Flags" );
+  //  // The top level of this tool's Config is a map, but our flags
+  //  // should go in a list, since they may or may not have unique keys.
+  //  // Therefore we make a child of the map (``flags_config``) to store
+  //  // the list.
+  //  rviz::Config flags_config = config.mapMakeChild( "Flags" );
 
-//  // To read the positions and names of the flags, we loop over the
-//  // the children of our Property container:
-//  rviz::Property* container = getPropertyContainer();
-//  int num_children = container->numChildren();
-//  for( int i = 0; i < num_children; i++ )
-//  {
-//    rviz::Property* position_prop = container->childAt( i );
-//    // For each Property, we create a new Config object representing a
-//    // single flag and append it to the Config list.
-//    rviz::Config flag_config = flags_config.listAppendNew();
-//    // Into the flag's config we store its name:
-//    flag_config.mapSetValue( "Name", position_prop->getName() );
-//    // ... and its position.
-//    position_prop->save( flag_config );
-//  }
+  //  // To read the positions and names of the flags, we loop over the
+  //  // the children of our Property container:
+  //  rviz::Property* container = getPropertyContainer();
+  //  int num_children = container->numChildren();
+  //  for( int i = 0; i < num_children; i++ )
+  //  {
+  //    rviz::Property* position_prop = container->childAt( i );
+  //    // For each Property, we create a new Config object representing a
+  //    // single flag and append it to the Config list.
+  //    rviz::Config flag_config = flags_config.listAppendNew();
+  //    // Into the flag's config we store its name:
+  //    flag_config.mapSetValue( "Name", position_prop->getName() );
+  //    // ... and its position.
+  //    position_prop->save( flag_config );
+  //  }
 }
 
 // In a tool's load() function, we don't need to read its class
